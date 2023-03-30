@@ -15,6 +15,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      - name: Set GitHub Repository
+        run: |
+          echo "::set-env name=GITHUB_REPOSITORY::$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')"
+          echo $GITHUB_REPOSITORY
+
       - name: Login to Docker Registry
         uses: docker/login-action@v1
         with:
@@ -23,13 +28,13 @@ jobs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: Build Docker Image
-        run: docker build -t ${{ github.repository.toLowerCase() }}:${{ env.BRANCH_NAME }} .
+        run: docker build -t ${{ env.GITHUB_REPOSITORY }}:${{ env.BRANCH_NAME }} .
 
       - name: Set Branch Name
         run: echo ::set-env name=BRANCH_NAME::${GITHUB_REF#refs/heads/}
 
       - name: Tag Docker Image
-        run: docker tag ${{ github.repository.toLowerCase() }}:${{ env.BRANCH_NAME }} ${{ secrets.DOCKER_REGISTRY_URL }}/${{ github.repository.toLowerCase() }}:${{ env.BRANCH_NAME }}
+        run: docker tag ${{ env.GITHUB_REPOSITORY }}:${{ env.BRANCH_NAME }} ${{ secrets.DOCKER_REGISTRY_URL }}/${{ env.GITHUB_REPOSITORY }}:${{ env.BRANCH_NAME }}
 
       - name: Push Docker Image
-        run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/${{ github.repository.toLowerCase() }}:${{ env.BRANCH_NAME }}
+        run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/${{ env.GITHUB_REPOSITORY }}:${{ env.BRANCH_NAME }}
