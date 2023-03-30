@@ -10,15 +10,15 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
 
       - name: Set GitHub Repository
-        run: |
-          echo "::set-env name=GITHUB_REPOSITORY::$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')"
-          echo $GITHUB_REPOSITORY
+        run: echo "GITHUB_REPOSITORY=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        
+      - name: Set Branch Name
+        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
 
       - name: Login to Docker Registry
         uses: docker/login-action@v1
@@ -30,11 +30,10 @@ jobs:
       - name: Build Docker Image
         run: docker build -t ${{ env.GITHUB_REPOSITORY }}:${{ env.BRANCH_NAME }} .
 
-      - name: Set Branch Name
-        run: echo ::set-env name=BRANCH_NAME::${GITHUB_REF#refs/heads/}
 
       - name: Tag Docker Image
         run: docker tag ${{ env.GITHUB_REPOSITORY }}:${{ env.BRANCH_NAME }} ${{ secrets.DOCKER_REGISTRY_URL }}/${{ env.GITHUB_REPOSITORY }}:${{ env.BRANCH_NAME }}
 
       - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/${{ env.GITHUB_REPOSITORY }}:${{ env.BRANCH_NAME }}
+
